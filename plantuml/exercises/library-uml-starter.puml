@@ -27,19 +27,95 @@ abstract class Item {
   + getCatalogueNumber() : String
 }
 
-' TODO: add boxes for Book and DVD. What differs between them — a whole class,
-'       or just the value of a loan-period field?
 
-' TODO: reference-only items cannot be borrowed at all. Decide how to say that
-'       in the diagram: a subclass, or an interface (e.g. "Borrowable") that
-'       only some items realize?
+@startuml
 
-' TODO: add Member and Librarian. What do they have in common? Add the common
-'       supertype if you think one is warranted.
+abstract class Item {
+    - title : String
+    - catalogueNumber : String
+    + getTitle() : String
+    + getCatalogueNumber() : String
+}
 
-' TODO: add whatever represents a hold, and connect it to the classes that need
-'       to know about it.
+interface Borrowable {
+    + borrow() : void
+    + isOnLoan() : boolean
+    + getLoanPeriodDays() : int
+}
 
-' TODO: add the arrows between all of your types.
+class Book {
+    - onLoan : boolean
+    + borrow() : void
+    + isOnLoan() : boolean
+    + getLoanPeriodDays() : int
+}
+
+class DVD {
+    - onLoan : boolean
+    + borrow() : void
+    + isOnLoan() : boolean
+    + getLoanPeriodDays() : int
+}
+
+class ReferenceOnlyItem {
+}
+
+class Member {
+    - memberNumber : String
+    - lateFee : BigDecimal
+    + login(memberNumber : String) : boolean
+    + borrow(item : Borrowable) : void
+    + placeHold(item : Borrowable) : Hold
+    + clearLateFee() : void
+}
+
+class Librarian {
+    + addItem(item : Item, catalogue : Catalogue) : void
+    + waiveLateFee(member : Member) : void
+}
+
+class Catalogue {
+    + addItem(item : Item) : void
+}
+
+class Hold {
+}
+
+' Generalization
+Item <|-- Book
+Item <|-- DVD
+Item <|-- ReferenceOnlyItem
+
+' Realization
+Borrowable <|.. Book
+Borrowable <|.. DVD
+
+' Association
+Member "1" -- "0..*" Hold : places
+Hold "0..*" --> "1" Borrowable : reserves
+Catalogue "1" --> "0..*" Item : contains
+
+' Dependency
+Member ..> Borrowable : borrows
+Librarian ..> Catalogue : manages
+Librarian ..> Member : waives fee
+
+' Constraints
+note bottom of Book
+    Loan period = 21 days
+end note
+
+note bottom of DVD
+    Loan period = 7 days
+end note
+
+note bottom of Hold
+    Item must be on loan
+    when a hold is placed.
+end note
+
+note bottom of Catalogue
+    Catalogue numbers must be unique.
+end note
 
 @enduml
